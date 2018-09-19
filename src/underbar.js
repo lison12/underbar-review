@@ -168,19 +168,33 @@
   //     return total + number * number;
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
+
+// array -> for loop
+// object -> for in
+
   _.reduce = function(collection, iterator, accumulator) {
     if (accumulator === undefined) {
       accumulator = collection[0];
+      collection = collection.slice(1);
     }
-    if (arguments.length < 3) {
-      _.each(collection.slice(1), function(item) {
-        accumulator = iterator(accumulator, item)
-      })
+    if (collection.__proto__ === Array.prototype) {
+      for (var i = 0; i < collection.length; i++) {
+        accumulator = iterator(collection[i]);
+      }
     } else {
-      _.each(collection, function(item) {
-        accumulator = iterator(accumulator, item);
-      })
+      for (var j in collection) {
+        accumulator = iterator(collection[j]);
+      }
     }
+    // if (arguments.length < 3) {
+    //   _.each(collection.slice(1), function(item) {
+    //     accumulator = iterator(accumulator, item)
+    //   })
+    // } else {
+    //   _.each(collection, function(item) {
+    //     accumulator = iterator(accumulator, item);
+    //   })
+    // }
     return accumulator;
   };
 
@@ -199,12 +213,16 @@
 
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
-    // TIP: Try re-using reduce() here.
+    if (collection.length === 0) {
+      return true;
+    }
+    return _.reduce(collection, iterator, false);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
+
     // TIP: There's a very clever way to re-use every() here.
   };
 
@@ -228,11 +246,25 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        obj[key] = arguments[i][key];
+      }
+    }
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        if (obj[key] === undefined) { 
+          obj[key] = arguments[i][key];
+        }
+      }
+    }
+    return obj;
   };
 
 
@@ -275,7 +307,25 @@
   // _.memoize should return a function that, when called, will check if it has
   // already computed the result for the given argument and return that value
   // instead if possible.
+
   _.memoize = function(func) {
+    //var alreadyCalled = false;
+    //var result = []
+    var obj = {}
+    return function() {
+      var key = '';
+      for (var i = 0; i < arguments.length; i++) {
+        key += arguments[i];
+      }
+      if (key in obj) {
+        return obj[key];
+      } else {
+        obj[key] = func.apply(this, arguments);
+        return obj[key];
+      }
+    }
+
+    
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -353,5 +403,16 @@
   //
   // Note: This is difficult! It may take a while to implement.
   _.throttle = function(func, wait) {
+    var alreadyCalled = false;
+    return function() {
+      if (alreadyCalled === false) {
+        alreadyCalled = true;
+        func.apply(this, arguments);
+      }
+      setTimeout(function() {
+        alreadyCalled = false;
+      }, wait)
+    }
+
   };
 }());
